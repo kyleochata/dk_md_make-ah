@@ -40,7 +40,7 @@ func (om OpenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c", "esc":
 			return om, tea.Quit
 		case "enter":
-			return om.send_to_title_model()
+			return Send_from_open(om)
 		}
 	}
 	return om, nil
@@ -59,8 +59,8 @@ func (om OpenModel) doTick() tea.Cmd {
 		return TickMsg(t)
 	})
 }
-func (om OpenModel) send_to_title_model() (tea.Model, tea.Cmd) {
-	return Title{}, func() tea.Msg {
+func Send_from_open(om OpenModel) (tea.Model, tea.Cmd) {
+	return New_Title_model(Answers{}), func() tea.Msg {
 		return tea.WindowSizeMsg{
 			Height: om.Height,
 			Width:  om.Width,
