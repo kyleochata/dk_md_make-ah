@@ -1,27 +1,36 @@
 package main
 
 import (
-	"github.com/charmbracelet/bubbles/textarea"
+	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	gloss "github.com/charmbracelet/lipgloss"
 )
 
 type Badges_model struct {
 	Answers
-	Cursor   int
-	Picked   []string
-	TextArea textarea.Model
+	Cursor int
+	Picked []string
+	List   list.Model
 }
 
+// list_item fufills the list.Item interface from bubbles/list
+type list_item struct {
+	name string
+}
+
+func (li list_item) FilterValue() string { return li.name }
+func (li list_item) Title() string       { return li.name }
+func (li list_item) Description() string { return li.name }
+
 func New_Badges_model(a Answers) tea.Model {
-	ta := textarea.New()
-	ta.Placeholder = "This project was built using...to solve...."
-	ta.Focus()
-	ta.Prompt = "Please introduce this project to explain the why and how of the project."
-
-	ta.FocusedStyle.Prompt.Foreground(gloss.Color("FFA500")).Bold(true)
-
-	return Badges_model{Answers: Answers{Responses: a.Responses}, TextArea: ta, Cursor: 0}
+	l := list.New([]list.Item{list_item{name: "golang"}}, list.NewDefaultDelegate(), a.Width/2, a.Height/2)
+	l.Title = "Select the badges you want to display"
+	l.InfiniteScrolling = true
+	l.FilterInput.Placeholder = "Golang"
+	l.FilterInput.TextStyle = gloss.NewStyle().Foreground(gloss.Color("#FFBF00")).Italic(true)
+	l.FilterInput.Prompt = "Search badges: "
+	l.FilterInput.PromptStyle = gloss.NewStyle().Foreground(gloss.Color("#FFFFFF")).Bold(true).MarginRight(2)
+	return Badges_model{Answers: Answers{Responses: a.Responses}, List: l, Cursor: 0}
 }
 
 func (bm Badges_model) Init() tea.Cmd {
@@ -42,12 +51,12 @@ func (bm Badges_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	var cmd tea.Cmd
-	bm.TextArea, cmd = bm.TextArea.Update(msg)
+	bm.List, cmd = bm.List.Update(msg)
 	return bm, cmd
 }
 
 func (bm Badges_model) View() string {
-	return bm.TextArea.View()
+	return bm.List.View()
 }
 
 // ===========================helper============================
