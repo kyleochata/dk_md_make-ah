@@ -34,21 +34,27 @@ func (m Intro_model) View() string {
 	uiEl := []string{}
 	uiEl = append(uiEl, m.TitleRender())
 	uiEl = append(uiEl, m.TextArea.View())
+	uiEl = append(uiEl, m.FooterRender())
 	return gloss.JoinVertical(gloss.Center, uiEl...)
 }
 
 func New_Intro_model(a Answers) tea.Model {
 	ta := ta.New()
 	ta.SetWidth(a.Width)
+	ta.SetHeight(a.Height * 2 / 3)
 	ta.Focus()
 	return Intro_model{Answers: a, TextArea: ta}
 }
 func (m Intro_model) TitleRender() string {
 	return m.TitleStyle().Render("In a few sentences, describe your project. What problem does this project solve?")
 }
+func (m Intro_model) FooterRender() string {
+	return m.FooterStyle().Render("Ctrl+C: Quit | Ctrl+N: Next Section | Enter: Start new line")
+}
 func GetTextAreaValue(m Intro_model) string {
 	return m.TextArea.Value()
 }
+
 func Send_to_Installation(m Intro_model) (tea.Model, tea.Cmd) {
 	m.Responses["intro"] = GetTextAreaValue(m)
 	return Installation_model{Answers: m.Answers}, func() tea.Msg {
@@ -65,6 +71,13 @@ type Installation_model struct {
 
 func (m Installation_model) Init() tea.Cmd { return nil }
 func (m Installation_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c":
+			return m, tea.Quit
+		}
+	}
 	return m, nil
 }
 func (m Installation_model) View() string {
@@ -77,4 +90,8 @@ func (m Intro_model) TitleStyle() gloss.Style {
 		Foreground(gloss.Color("#FFBF00")).
 		Align(gloss.Right).
 		Margin(1, 1, 1, 1)
+}
+func (m Intro_model) FooterStyle() gloss.Style {
+	return gloss.NewStyle().
+		Foreground(gloss.Color("#B2BEB5")).Align(gloss.Center)
 }
