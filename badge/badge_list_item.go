@@ -36,7 +36,7 @@ var (
 	selectedTextStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Bold(true)
 	normalBadgeStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
 	selectedBadgeStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("13"))
-	badgePickedStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("82"))
+	badgePickedStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("82")).Background(lipgloss.Color("252"))
 )
 
 type CustomDelegate struct{}
@@ -66,12 +66,12 @@ func (d CustomDelegate) Render(w io.Writer, m list.Model, index int, item list.I
 	} else {
 		cursor = "    " // Empty when not selected
 	}
-	var badge_chosen string
-	if i.BadgePicked {
-		badge_chosen = "[X]"
-	} else {
-		badge_chosen = "    "
-	}
+	// var badge_chosen string
+	// if i.BadgePicked {
+	// 	badge_chosen = "[X]"
+	// } else {
+	// 	badge_chosen = "    "
+	// }
 
 	// Apply styles based on whether the item is selected or not
 	name := normalTextStyle.Render(i.Name)
@@ -87,5 +87,5 @@ func (d CustomDelegate) Render(w io.Writer, m list.Model, index int, item list.I
 	}
 
 	// Render the combined item output
-	fmt.Fprintf(w, "%s  %s\t%s\t%s", cursor, badge_chosen, name, badge) // Render name and badge with a tab for spacing
+	fmt.Fprintf(w, "%s  %s\t%s", cursor, name, badge) // Render name and badge with a tab for spacing
 }

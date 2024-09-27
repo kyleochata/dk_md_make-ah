@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
 	gloss "github.com/charmbracelet/lipgloss"
@@ -31,8 +32,12 @@ func (m Badge_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			m.HandleSelectBadge()
 			return m, nil
+
+		case "ctrl+a":
+			return m.Send_to_Intro(m.Answers)
 		}
 	}
+
 	var cmd tea.Cmd
 	if m.List, cmd = m.List.Update(msg); cmd != nil {
 		return m, cmd
@@ -72,29 +77,94 @@ func New_Badges_model(a Answers) tea.Model {
 	}
 	lh := a.Height * 2 / 3
 	l := list.New(li, badge.CustomDelegate{}, a.Width, lh)
+	l.AdditionalFullHelpKeys = AdditionalFullHelpKeys
+	l.AdditionalShortHelpKeys = AdditionalShortHelpKeys
+	l.AdditionalShortHelpKeys()
 	return Badge_model{Answers: a, List: l, BadgeChoices: badges_arr}
 }
 
 func (m *Badge_model) HandleSelectBadge() {
 	selectedItem := m.List.SelectedItem()
 	if selectedItem == nil {
-		return // No item selected
+		return
 	}
 	badgeItem, ok := selectedItem.(badge.Item)
 	if !ok || badgeItem.IsSection {
-		return // Ensure the type is correct
+		return
 	}
 	// Toggle the badge selection
 	for i, item := range m.BadgeChoices {
 		if item.Name == badgeItem.Name {
-			// Remove the badge if already selected
 			m.BadgeChoices = append(m.BadgeChoices[:i], m.BadgeChoices[i+1:]...)
-			badgeItem.BadgePicked = false // Update the badgeItem
+			badgeItem.BadgePicked = false
 			return
 		}
 	}
 
 	// Add the badge if not already selected
-	badgeItem.BadgePicked = true // Update the badgeItem
+	badgeItem.BadgePicked = true
 	m.BadgeChoices = append(m.BadgeChoices, badgeItem)
+}
+
+func (m Badge_model) Send_to_Intro(a Answers) (tea.Model, tea.Cmd) {
+	m.Responses["badge"] = m.BadgeChoices
+	return New_Intro_model(m.Answers), func() tea.Msg {
+		return tea.WindowSizeMsg{
+			Height: m.Height,
+			Width:  m.Width,
+		}
+	}
+}
+
+// Short help keys
+func AdditionalShortHelpKeys() []key.Binding {
+	return []key.Binding{
+		key.NewBinding(
+			key.WithKeys("ctrl+a"),
+			key.WithHelp("ctrl+a", "Go to Intro Section"),
+		),
+	}
+}
+
+// Full help keys
+func AdditionalFullHelpKeys() []key.Binding {
+	return []key.Binding{
+		key.NewBinding(
+			key.WithKeys("ctrl+a"),
+			key.WithHelp("ctrl+a", "Go to Intro Section"),
+		),
+		key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "Select Badge"),
+		),
+		key.NewBinding(
+			key.WithKeys("ctrl+c"),
+			key.WithHelp("ctrl+c", "Quit"),
+		),
+	}
+}
+
+type Intro_model struct {
+	Answers
+}
+
+func (m Intro_model) Init() tea.Cmd { return nil }
+func (m Intro_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	return m, nil
+}
+func (m Intro_model) View() string {
+	selectedBadges, ok := m.Responses["badge"].([]badge.Item)
+	if !ok {
+		return "Invalid badge data"
+	}
+	uiEl := []string{}
+	for _, bi := range selectedBadges {
+		// Process each badge item
+		uiEl = append(uiEl, bi.Title())
+	}
+	return gloss.JoinVertical(gloss.Center, uiEl...)
+}
+
+func New_Intro_model(a Answers) tea.Model {
+	return Intro_model{Answers: a}
 }
