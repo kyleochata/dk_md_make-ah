@@ -5,20 +5,15 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/kyleochata/md_makah/badge"
+	"github.com/kyleochata/md_maker/badge"
 )
 
-//	type badge.Item struct {
-//		Name      string
-//		Badge     string
-//		IsSection bool
-//	}
-type Badge_Section struct {
-	Title string       `json:"title"`
-	Items []badge.Item `json:"badgeList`
-}
+// type Badge_Section struct {
+// 	Title string       `json:"title"`
+// 	Items []badge.Item `json:"badgeList`
+// }
 
-func GetBadges() []badge.Item {
+func PullData() []badge.Item {
 	data, err := os.ReadFile("available_badges.md")
 	if err != nil {
 		panic(err)
@@ -39,14 +34,11 @@ func GetBadges() []badge.Item {
 		rows := rowRegex.FindAllStringSubmatch(sectionsData[i+1], -1)
 		for _, row := range rows {
 			name := strings.TrimSpace(row[1])
-			badge := strings.TrimSpace(row[2])
+			badgeText := strings.TrimSpace(row[2])
 			if name == "Name" || strings.Contains(name, "---") {
 				continue
 			}
-			item := badge.Item{
-				Name:  name,
-				Badge: badge,
-			}
+			item := badge.Item{Name: name, Badge: badgeText}
 			items = append(items, item)
 		}
 	}
