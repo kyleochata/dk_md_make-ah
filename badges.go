@@ -33,7 +33,7 @@ func (m Badge_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.HandleSelectBadge()
 			return m, nil
 
-		case "ctrl+a":
+		case "ctrl+n":
 			return m.Send_to_Intro(m.Answers)
 		}
 	}
@@ -105,9 +105,13 @@ func (m *Badge_model) HandleSelectBadge() {
 	badgeItem.BadgePicked = true
 	m.BadgeChoices = append(m.BadgeChoices, badgeItem)
 }
+func (m *Badge_model) TurnOffHelp() {
+	m.List.SetShowHelp(false)
+}
 
 func (m Badge_model) Send_to_Intro(a Answers) (tea.Model, tea.Cmd) {
 	m.Responses["badge"] = m.BadgeChoices
+	m.TurnOffHelp()
 	return New_Intro_model(m.Answers), func() tea.Msg {
 		return tea.WindowSizeMsg{
 			Height: m.Height,
@@ -120,8 +124,8 @@ func (m Badge_model) Send_to_Intro(a Answers) (tea.Model, tea.Cmd) {
 func AdditionalShortHelpKeys() []key.Binding {
 	return []key.Binding{
 		key.NewBinding(
-			key.WithKeys("ctrl+a"),
-			key.WithHelp("ctrl+a", "Go to Intro Section"),
+			key.WithKeys("ctrl+n"),
+			key.WithHelp("ctrl+n", "Next Section"),
 		),
 	}
 }
@@ -130,8 +134,8 @@ func AdditionalShortHelpKeys() []key.Binding {
 func AdditionalFullHelpKeys() []key.Binding {
 	return []key.Binding{
 		key.NewBinding(
-			key.WithKeys("ctrl+a"),
-			key.WithHelp("ctrl+a", "Go to Intro Section"),
+			key.WithKeys("ctrl+n"),
+			key.WithHelp("ctrl+n", "Next Section"),
 		),
 		key.NewBinding(
 			key.WithKeys("enter"),

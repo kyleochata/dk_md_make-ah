@@ -21,7 +21,9 @@ func PullData() []badge.Item {
 
 	badgeTables := string(data)
 	sectionRegex := regexp.MustCompile(`(?m)^###\s(.+)$`)
-	rowRegex := regexp.MustCompile(`\|\s(.+?)\s+\|\s(.+?)\s+\|`)
+	// rowRegex := regexp.MustCompile(`\|\s(.+?)\s+\|\s(.+?)\s+\|`)
+	rowRegex := regexp.MustCompile(`\|\s+([^|]+?)\s+\|\s+([^|]+?)\s+\|`)
+
 	sectionMatches := sectionRegex.FindAllStringSubmatch(badgeTables, -1)
 
 	// Split the data into sections
