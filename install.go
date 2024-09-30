@@ -15,6 +15,7 @@ const (
 type fs_im int
 type Installation_model struct {
 	Answers
+	//InstallChoices []string
 	List           list.Model
 	TextArea       textarea.Model
 	FocusState     fs_im
