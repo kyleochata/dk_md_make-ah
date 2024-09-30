@@ -60,7 +60,7 @@ func GetTextAreaValue(m Intro_model) string {
 
 func Send_to_Installation(m Intro_model) (tea.Model, tea.Cmd) {
 	m.Responses["intro"] = GetTextAreaValue(m)
-	return Installation_model{Answers: m.Answers}, func() tea.Msg {
+	return New_Install_model(m.Answers), func() tea.Msg {
 		return tea.WindowSizeMsg{
 			Height: m.Height,
 			Width:  m.Width,

@@ -33,15 +33,19 @@ func (m Installation_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 func (m Installation_model) View() string {
-	return "hello"
+	if len(m.List.Items()) == 0 {
+		return "No items pop"
+	}
+	return m.List.View()
 }
 
 // =========Helper==================
-var available_installs []string = []string{"C", "C++", "C#", "Golang", "Rails", "Ruby", "TypeScript"}
+var available_installs = []string{"C", "C++", "C#", "Golang", "Node.js", "Rails", "Ruby", "TypeScript"}
 
 func New_Install_model(a Answers) tea.Model {
 	list_items := make_list_items(available_installs)
-	list := list.New(list_items, install.CustomDelegate{}, a.Width, a.Height)
+	list := list.New(list_items, install.CustomDelegate{}, a.Width, a.Height/3)
+	list.Title = "Available Install Boilerplate"
 	ta := textarea.New()
 	return Installation_model{Answers: a, List: list, TextArea: ta, FocusState: fs_im_list, InstallChoices: []string{}}
 }
