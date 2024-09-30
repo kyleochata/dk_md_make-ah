@@ -42,6 +42,9 @@ func New_Intro_model(a Answers) tea.Model {
 	ta := ta.New()
 	ta.SetWidth(a.Width)
 	ta.SetHeight(a.Height * 2 / 3)
+	if intro, ok := a.Responses["intro"].(string); ok {
+		ta.SetValue(intro)
+	}
 	ta.Focus()
 	return Intro_model{Answers: a, TextArea: ta}
 }
@@ -63,25 +66,6 @@ func Send_to_Installation(m Intro_model) (tea.Model, tea.Cmd) {
 			Width:  m.Width,
 		}
 	}
-}
-
-type Installation_model struct {
-	Answers
-}
-
-func (m Installation_model) Init() tea.Cmd { return nil }
-func (m Installation_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c":
-			return m, tea.Quit
-		}
-	}
-	return m, nil
-}
-func (m Installation_model) View() string {
-	return "hello"
 }
 
 // =======Style==================
