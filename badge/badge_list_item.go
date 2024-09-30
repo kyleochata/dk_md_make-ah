@@ -66,13 +66,6 @@ func (d CustomDelegate) Render(w io.Writer, m list.Model, index int, item list.I
 	} else {
 		cursor = "    " // Empty when not selected
 	}
-	// var badge_chosen string
-	// if i.BadgePicked {
-	// 	badge_chosen = "[X]"
-	// } else {
-	// 	badge_chosen = "    "
-	// }
-
 	// Apply styles based on whether the item is selected or not
 	name := normalTextStyle.Render(i.Name)
 	badge := normalBadgeStyle.Render(i.Badge)
