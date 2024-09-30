@@ -1,4 +1,6 @@
-### Node.js Installation Guide
+### **Node.js** Installation Guide
+
+---
 
 Follow these steps to install Node.js on your computer.
 
@@ -54,4 +56,6 @@ Check your npm version (npm comes with Node.js):
 npm -v
 ```
 
-\*For any issues please visit the official [Node.js Installation Guide](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs)
+_For any issues please visit the official [Node.js Installation Guide](https://nodejs.org/en/learn/getting-started/how-to-install-nodejs)_
+
+---

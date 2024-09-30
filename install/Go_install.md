@@ -1,4 +1,6 @@
-### Go Installation Guide
+### **Go** Installation Guide
+
+---
 
 Follow these steps to install Go (Golang) on your computer.
 
@@ -51,3 +53,5 @@ Follow these steps to install Go (Golang) on your computer.
   ```
 
 _For any issues, please visit the official [Golang Installation Guide](https://go.dev/doc/install)._
+
+---
