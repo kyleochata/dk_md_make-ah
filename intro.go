@@ -38,16 +38,21 @@ func (m Intro_model) View() string {
 	return gloss.JoinVertical(gloss.Center, uiEl...)
 }
 
+// ====================Helper====================================
 func New_Intro_model(a Answers) tea.Model {
 	ta := ta.New()
 	ta.SetWidth(a.Width)
 	ta.SetHeight(a.Height * 2 / 3)
+
+	// Ensure that the TextArea starts clean and only includes the intended intro text
 	if intro, ok := a.Responses["intro"].(string); ok {
 		ta.SetValue(intro)
 	}
 	ta.Focus()
+
 	return Intro_model{Answers: a, TextArea: ta}
 }
+
 func (m Intro_model) TitleRender() string {
 	return m.TitleStyle().Render("In a few sentences, describe your project. What problem does this project solve?")
 }
