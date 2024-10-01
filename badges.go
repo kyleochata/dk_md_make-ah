@@ -109,7 +109,7 @@ func (m *Badge_model) TurnOffHelp() {
 	m.List.SetShowHelp(false)
 }
 
-func (m Badge_model) Send_to_Intro(a Answers) (tea.Model, tea.Cmd) {
+func (m *Badge_model) Send_to_Intro(a Answers) (tea.Model, tea.Cmd) {
 	m.Responses["badge"] = m.BadgeChoices
 	m.TurnOffHelp()
 	return New_Intro_model(m.Answers), func() tea.Msg {
