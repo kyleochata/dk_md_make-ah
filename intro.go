@@ -14,7 +14,8 @@ type Intro_model struct {
 func (m Intro_model) Init() tea.Cmd { return nil }
 func (m Intro_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-
+	case tea.WindowSizeMsg:
+		m.Height, m.Width = msg.Height, msg.Width
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -41,7 +42,7 @@ func (m Intro_model) View() string {
 // ====================Helper====================================
 func New_Intro_model(a Answers) tea.Model {
 	ta := ta.New()
-	ta.SetWidth(a.Width)
+	ta.SetWidth(a.Width - 3)
 	ta.SetHeight(a.Height * 2 / 3)
 
 	// Ensure that the TextArea starts clean and only includes the intended intro text
@@ -77,7 +78,7 @@ func Send_to_Installation(m Intro_model) (tea.Model, tea.Cmd) {
 func (m Intro_model) TitleStyle() gloss.Style {
 	return gloss.NewStyle().
 		Foreground(gloss.Color("#FFBF00")).
-		Align(gloss.Right).
+		Align(gloss.Center).
 		Margin(1, 1, 1, 1)
 }
 func (m Intro_model) FooterStyle() gloss.Style {
