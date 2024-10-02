@@ -44,9 +44,12 @@ func (m Installation_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.handleListSelection()
 				return m, nil
 			}
+		case "ctrl+n":
+			return m.Send_to_Usage()
 		}
 	}
 
+	//Update the bubbles
 	var cmd tea.Cmd
 	if m.FocusState == fs_im_list {
 		if m.List, cmd = m.List.Update(msg); cmd != nil {
@@ -178,14 +181,42 @@ func (m *Installation_model) handleListSelection() {
 }
 
 func (m *Installation_model) Send_to_Intro() (tea.Model, tea.Cmd) {
-	m.Responses["install"] = m.TextArea.Value()
-	m.Responses["genIntro"] = m.InstallChoices
+	m.save_install_data()
 	return New_Intro_model(m.Answers), func() tea.Msg {
 		return tea.WindowSizeMsg{
 			Height: m.Height,
 			Width:  m.Width,
 		}
 	}
+}
+func (m *Installation_model) save_install_data() {
+	m.Responses["install"] = m.TextArea.Value()
+	m.Responses["genIntro"] = m.InstallChoices
+}
+
+func (m *Installation_model) Send_to_Usage() (tea.Model, tea.Cmd) {
+	m.save_install_data()
+	return New_Usage_model(m.Answers), func() tea.Msg {
+		return tea.WindowSizeMsg{
+			Height: m.Height,
+			Width:  m.Width,
+		}
+	}
+}
+
+type Usage_model struct {
+	Answers
+}
+
+func (m Usage_model) Init() tea.Cmd { return nil }
+func (m Usage_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	return m, nil
+}
+func (m Usage_model) View() string {
+	return "from usage"
+}
+func New_Usage_model(a Answers) tea.Model {
+	return Usage_model{Answers: a}
 }
 
 // ===========Style==========================
