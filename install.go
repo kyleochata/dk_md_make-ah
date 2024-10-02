@@ -18,7 +18,6 @@ const (
 type fs_im int
 type Installation_model struct {
 	Answers
-	//InstallChoices []string
 	List           list.Model
 	TextArea       textarea.Model
 	FocusState     fs_im
@@ -38,8 +37,16 @@ func (m Installation_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "tab":
 			m.toggle_focus()
 			return m, nil
+		case "ctrl+b":
+			return m.Send_to_Intro()
+		case "enter":
+			if m.FocusState == fs_im_list {
+				m.handleListSelection()
+				return m, nil
+			}
 		}
 	}
+
 	var cmd tea.Cmd
 	if m.FocusState == fs_im_list {
 		if m.List, cmd = m.List.Update(msg); cmd != nil {
@@ -57,19 +64,31 @@ func (m Installation_model) View() string {
 	if len(m.List.Items()) == 0 {
 		return "No items pop"
 	}
-	uiEl := []string{}
 
+	uiEl := []string{}
 	if m.FocusState == fs_im_list {
 		s := "Choose a pre-built installation guide for languages/tools used for your project.\nSelecting one will add generic install instructions for the language/tool picked."
-		uiEl = append(uiEl, m.titleStyle().Render(s))
+		uiEl = append(uiEl, m.titleStyle().Width(m.Width).Render(s)) //The list takes the width off of the first item. If this isn't m.Width, its gloss.Left
 	}
 
-	uiEl = append(uiEl, gloss.NewStyle().Align(gloss.Center).Margin(1, 0, 1, 0).Render(m.List.View()))
+	choice_pool := []string{}
+	if len(m.InstallChoices) > 0 {
+		for _, choice := range m.InstallChoices {
+			choice_pool = append(choice_pool, m.titleStyle().Render(choice))
+		}
+		uiEl = append(uiEl, gloss.JoinHorizontal(gloss.Left, choice_pool...))
+	}
 
-	uiEl = append(uiEl, gloss.NewStyle().Align(gloss.Center).Padding(1, 2, 1, 2).Margin(1, 0, 1, 0).Render(m.TextArea.View()))
-
-	if m.FocusState == fs_im_ta {
-		s := "Ctrl+C: Quit | Ctrl+N: Next Section | Tab: Switch to List"
+	// Render list or text area depending on focus
+	if m.FocusState == fs_im_list {
+		uiEl = append(uiEl, gloss.NewStyle().Align(gloss.Right).Render(m.List.View()))
+		foot := fmt.Sprintf("%s\n%s", "Press Tab to add more installation steps", "Ctrl+C: Quit | Ctrl+N: Next Section")
+		uiEl = append(uiEl, foot)
+	} else if m.FocusState == fs_im_ta {
+		// Render the text area view
+		uiEl = append(uiEl, m.titleStyle().Render("Use markdown syntax to add your additional installation instructions."))
+		uiEl = append(uiEl, gloss.NewStyle().Align(gloss.Center).Padding(1, 2, 1, 2).Margin(1, 0, 1, 0).Render(m.TextArea.View()))
+		s := "Ctrl+C: Quit | Ctrl+N: Next Section | Tab: Install Guides List"
 		uiEl = append(uiEl, m.titleStyle().Align(gloss.Center).Render(s))
 	}
 
@@ -81,10 +100,15 @@ var available_installs = []string{"C", "C++", "C#", "Golang", "Node.js", "Rails"
 
 func (m *Installation_model) windowResize(msg tea.WindowSizeMsg) {
 	m.Height, m.Width = msg.Height, msg.Width
-	m.List.SetHeight(m.Height / 3)
+	//To avoid overflow on resize
+	maxListHeight := m.Height / 3
+	if maxListHeight < 10 {
+		maxListHeight = 10
+	}
+	m.List.SetHeight(maxListHeight)
 	m.List.SetWidth(m.Width)
 	m.TextArea.SetWidth(m.Width)
-	m.setDynamicPrompt()
+	// m.setDynamicPrompt()
 }
 
 func New_Install_model(a Answers) tea.Model {
@@ -94,27 +118,22 @@ func New_Install_model(a Answers) tea.Model {
 	ta := textarea.New()
 	ta.SetHeight(a.Height / 2)
 	ta.SetWidth(a.Width)
+	if a.Responses["intro"] != "" {
+		additional_install_steps_s := a.Responses["intro"].(string)
+		ta.SetValue(additional_install_steps_s)
+	}
+	xs_install_choices := []string{}
+	if a.Responses["genIntro"] != nil {
+		xs_install_choices = a.Responses["genIntro"].([]string)
+	}
 	ta.Blur()
-
-	const promptWidth = 50
-	promptText := "If your project requires further installation steps, please add them below."
-	p2Text := "Use markdown syntax for best results."
-	// Set the dynamic prompt function
-	ta.SetPromptFunc(promptWidth, func(lineIdx int) string {
-		if lineIdx == 0 {
-			return promptText
-		} else if lineIdx == 1 {
-			return fmt.Sprintf("%*s", len(promptText), p2Text)
-		}
-		return fmt.Sprintf("%*s", len(promptText), "") // Return spaces for alignment
-	})
 
 	return Installation_model{
 		Answers:        a,
 		List:           list,
 		TextArea:       ta,
 		FocusState:     fs_im_list,
-		InstallChoices: []string{},
+		InstallChoices: xs_install_choices,
 	}
 }
 
@@ -135,7 +154,7 @@ func (m *Installation_model) toggle_focus() {
 		m.List.SetShowHelp(false)
 		m.FocusState = fs_im_ta
 		m.TextArea.Focus()
-		m.setDynamicPrompt()
+		// m.setDynamicPrompt()
 	} else {
 		m.FocusState = fs_im_list
 		m.List.SetShowHelp(true)
@@ -143,30 +162,29 @@ func (m *Installation_model) toggle_focus() {
 	}
 }
 
-func (m *Installation_model) setDynamicPrompt() {
-	const promptWidth = 50
-	promptText := "If your project requires further installation steps, please add them below."
-	p2Text := "Use markdown syntax for best results."
-
-	// Set the dynamic prompt function
-	m.TextArea.SetPromptFunc(promptWidth, m.generatePromptFunc(promptText, p2Text))
+func (m *Installation_model) handleListSelection() {
+	selectedItem := m.List.SelectedItem()
+	if selectedItem == nil {
+		return
+	}
+	title := selectedItem.FilterValue()
+	for i, install_choice := range m.InstallChoices {
+		if title == install_choice {
+			m.InstallChoices = append(m.InstallChoices[:i], m.InstallChoices[i+1:]...)
+			return
+		}
+	}
+	m.InstallChoices = append(m.InstallChoices, title)
 }
 
-func (m *Installation_model) generatePromptFunc(promptText, p2Text string) func(int) string {
-	return func(lineIdx int) string {
-		if m.FocusState == fs_im_ta {
-			switch lineIdx {
-			case 0:
-				return promptText
-			case 1:
-				// Ensure that line 2 starts in the same position as line 1
-				return fmt.Sprintf("%*s", len(promptText), p2Text)
-			default:
-				// Ensure that all other lines start in the same position as line 1
-				return fmt.Sprintf("%*s", len(promptText), "")
-			}
+func (m *Installation_model) Send_to_Intro() (tea.Model, tea.Cmd) {
+	m.Responses["install"] = m.TextArea.Value()
+	m.Responses["genIntro"] = m.InstallChoices
+	return New_Intro_model(m.Answers), func() tea.Msg {
+		return tea.WindowSizeMsg{
+			Height: m.Height,
+			Width:  m.Width,
 		}
-		return fmt.Sprintf("%*s", len(promptText), "") //keep lines from jumping alignment
 	}
 }
 
@@ -199,3 +217,29 @@ func (m Installation_model) titleStyle() gloss.Style {
 // 		blueTextStyle.Render(endingText),
 // 	)
 // }
+// func (m *Installation_model) setDynamicPrompt() {
+// 	const promptWidth = 50
+// 	promptText := "If your project requires further installation steps, please add them below."
+// 	p2Text := "Use markdown syntax for best results."
+
+// 	// Set the dynamic prompt function
+// 	m.TextArea.SetPromptFunc(promptWidth, m.generatePromptFunc(promptText, p2Text))
+// }
+
+//	func (m *Installation_model) generatePromptFunc(promptText, p2Text string) func(int) string {
+//		return func(lineIdx int) string {
+//			if m.FocusState == fs_im_ta && m.TextArea.Value() == "" {
+//				switch lineIdx {
+//				case 0:
+//					return promptText
+//				case 1:
+//					// Ensure that line 2 starts in the same position as line 1
+//					return fmt.Sprintf("%*s", len(promptText), p2Text)
+//				default:
+//					// Ensure that all other lines start in the same position as line 1
+//					return fmt.Sprintf("%*s", len(promptText), "")
+//				}
+//			}
+//			return "" //No prompt when text. Weird format is line of text is too long.
+//		}
+//	}
