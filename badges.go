@@ -50,7 +50,7 @@ func (m Badge_model) View() string {
 	badgeEl := []string{}
 	for _, chosenBadge := range m.BadgeChoices {
 		s := fmt.Sprintf("%s\t", chosenBadge.Name)
-		badgeEl = append(badgeEl, s)
+		badgeEl = append(badgeEl, gloss.NewStyle().Width(m.Width).Render(s))
 	}
 	uiEl = append(uiEl, gloss.JoinHorizontal(gloss.Center, badgeEl...))
 	uiEl = append(uiEl, m.List.View())
@@ -109,6 +109,7 @@ func (m *Badge_model) TurnOffHelp() {
 	m.List.SetShowHelp(false)
 }
 
+// CHORE: Fix the args
 func (m *Badge_model) Send_to_Intro(a Answers) (tea.Model, tea.Cmd) {
 	m.Responses["badge"] = m.BadgeChoices
 	m.TurnOffHelp()
