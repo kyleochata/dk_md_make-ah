@@ -121,13 +121,19 @@ func New_Install_model(a Answers) tea.Model {
 	ta := textarea.New()
 	ta.SetHeight(a.Height / 2)
 	ta.SetWidth(a.Width)
-	if a.Responses["intro"] != "" {
-		additional_install_steps_s := a.Responses["intro"].(string)
-		ta.SetValue(additional_install_steps_s)
+	if val, ok := a.Responses["intro"]; ok {
+		ta.SetValue(val.(string))
 	}
+	// if a.Responses["intro"] != "" {
+	// 	additional_install_steps_s := a.Responses["intro"].(string)
+	// 	ta.SetValue(additional_install_steps_s)
+	// }
 	xs_install_choices := []string{}
-	if a.Responses["genIntro"] != nil {
-		xs_install_choices = a.Responses["genIntro"].([]string)
+	// if a.Responses["genIntro"] != nil {
+	// 	xs_install_choices = a.Responses["genIntro"].([]string)
+	// }
+	if choices, ok := a.Responses["genIntro"]; ok {
+		xs_install_choices = choices.([]string)
 	}
 	ta.Blur()
 
@@ -196,27 +202,12 @@ func (m *Installation_model) save_install_data() {
 
 func (m *Installation_model) Send_to_Usage() (tea.Model, tea.Cmd) {
 	m.save_install_data()
-	return New_Usage_model(m.Answers), func() tea.Msg {
+	return New_Use_model(m.Answers), func() tea.Msg {
 		return tea.WindowSizeMsg{
 			Height: m.Height,
 			Width:  m.Width,
 		}
 	}
-}
-
-type Usage_model struct {
-	Answers
-}
-
-func (m Usage_model) Init() tea.Cmd { return nil }
-func (m Usage_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return m, nil
-}
-func (m Usage_model) View() string {
-	return "from usage"
-}
-func New_Usage_model(a Answers) tea.Model {
-	return Usage_model{Answers: a}
 }
 
 // ===========Style==========================
