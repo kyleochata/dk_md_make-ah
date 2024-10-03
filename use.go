@@ -66,10 +66,19 @@ func (m *Use_model) Send_to_Installation() (tea.Model, tea.Cmd) {
 }
 func (m Use_model) send_to_license() (tea.Model, tea.Cmd) {
 	m.save_use_data()
-	return New_License_model(m.Answers), func() tea.Msg {
-		return tea.WindowSizeMsg{
-			Height: m.Height,
-			Width:  m.Width,
+	if LicenseFileExists() {
+		return New_has_License_model(m.Answers, FindLicenseType(), false), func() tea.Msg {
+			return tea.WindowSizeMsg{
+				Height: m.Height,
+				Width:  m.Width,
+			}
+		}
+	} else {
+		return New_Fail_License_check_model(m.Answers), func() tea.Msg {
+			return tea.WindowSizeMsg{
+				Height: m.Height,
+				Width:  m.Width,
+			}
 		}
 	}
 }

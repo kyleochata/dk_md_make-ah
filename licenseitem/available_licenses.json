@@ -1,0 +1,42 @@
+[
+  {
+    "license": "MIT License",
+    "description": "A permissive license allowing almost unrestricted use, modification, and distribution, with attribution to the original author."
+  },
+  {
+    "license": "GNU General Public License (GPL)",
+    "description": "A copyleft license requiring any modified versions to also be open-source and distributed under the same GPL terms."
+  },
+  {
+    "license": "Apache License 2.0",
+    "description": "A permissive license allowing use, modification, and distribution, with patent rights granted and explicit notices required for attribution."
+  },
+  {
+    "license": "BSD 3-Clause License",
+    "description": "A permissive license similar to MIT but includes a clause preventing the use of the names of the original project contributors for endorsement."
+  },
+  {
+    "license": "BSD 2-Clause License",
+    "description": "A simpler version of the BSD 3-Clause, omitting the non-endorsement clause, allowing for permissive use, modification, and redistribution."
+  },
+  {
+    "license": "Mozilla Public License 2.0 (MPL)",
+    "description": "A weak copyleft license requiring modified source files to be made open, but allowing linking with proprietary code."
+  },
+  {
+    "license": "GNU Lesser General Public License (LGPL)",
+    "description": "A more permissive version of the GPL, allowing linking with proprietary software while still enforcing open-source for the LGPL-covered components."
+  },
+  {
+    "license": "Eclipse Public License (EPL)",
+    "description": "A weak copyleft license, similar to MPL, allowing usage with proprietary code but requiring open-source distribution of changes made to the original code."
+  },
+  {
+    "license": "Creative Commons Attribution 4.0 International (CC BY 4.0)",
+    "description": "A license that allows free use, sharing, and adaptation of content, as long as proper credit is given to the original creator."
+  },
+  {
+    "license": "Unlicense",
+    "description": "A public domain dedication, allowing users to do anything with the software without any restrictions or requirements for attribution."
+  }
+]
