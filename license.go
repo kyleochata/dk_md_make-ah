@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	gloss "github.com/charmbracelet/lipgloss"
@@ -18,6 +19,7 @@ type License_model struct {
 	Pregen_license string
 	TextArea       textarea.Model
 	edit_pregen    bool
+	List           list.Model
 }
 
 func (m License_model) Init() tea.Cmd { return nil }
@@ -99,7 +101,12 @@ func licenseFileExists() bool {
 	return true
 }
 
-const found_s string = "## Licesne\n `Please see the LICENSE file in this respository`\n Please click on the badge at the top of the README.md for additional information."
+// const found_s string = "## Licesne\n ```Please see the LICENSE file in this respository```\n Please click on the badge at the top of the README.md for additional information."
+const found_s string = `## License
+> License
+>
+> Please review the LICENSE file in this repository
+Please click on the badge at the top of the README.md for additional information.`
 
 func (m *License_model) edit_pregen_license() (tea.Model, tea.Cmd) {
 	if !m.edit_pregen {
@@ -121,7 +128,7 @@ func (m License_model) preGenLicense() string {
 			return found_s
 		}
 		if m.License_type != "" {
-			return m.TextArea.Value() //if prior editing show this
+			return m.TextArea.Value()
 		}
 	}
 	return ""
@@ -164,3 +171,11 @@ func findLicenseType() string {
 	}
 	return ""
 }
+
+// func (m *License_model) show_license_list() {
+// 	m.List = list.New()
+// }
+
+// func Generate_License_file(license_type string) {
+
+// }
