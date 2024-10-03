@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	gloss "github.com/charmbracelet/lipgloss"
+	lli "github.com/kyleochata/md_maker/licenseitem"
 )
 
 type License_model struct {
@@ -20,6 +21,7 @@ type License_model struct {
 	TextArea       textarea.Model
 	edit_pregen    bool
 	List           list.Model
+	showList       bool
 }
 
 func (m License_model) Init() tea.Cmd { return nil }
@@ -38,14 +40,22 @@ func (m License_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.FoundLicense {
 				return m.edit_pregen_license()
 			}
+		case "ctrl+l":
+			return m.show_license_list()
 		}
 	}
+	var cmd tea.Cmd
 	if m.edit_pregen {
-		var cmd tea.Cmd
 		if m.TextArea, cmd = m.TextArea.Update(msg); cmd != nil {
 			return m, cmd
 		}
 	}
+	if m.showList {
+		if m.List, cmd = m.List.Update(msg); cmd != nil {
+			return m, cmd
+		}
+	}
+
 	return m, nil
 }
 func (m License_model) View() string {
@@ -60,8 +70,13 @@ func (m License_model) View() string {
 			uiEl = append(uiEl, gloss.NewStyle().Align(gloss.Left).Render(m.preGenLicense()))
 		}
 	} else {
-		s_no_license := "Seems like there is no LICENSE file in this directory\nIf you have one, please move it to this directory\nCtrl+R: Refresh | Ctrl+L: Generate a license file"
-		uiEl = append(uiEl, gloss.NewStyle().Width(m.Width).Render(s_no_license))
+		if !m.showList {
+			s_no_license := "Seems like there is no LICENSE file in this directory\nIf you have one, please move it to this directory\nCtrl+R: Refresh | Ctrl+L: Generate a license file"
+			uiEl = append(uiEl, gloss.NewStyle().Width(m.Width).Align(gloss.Center).Margin(1, 0, 1, 0).Render(s_no_license))
+		} else {
+			uiEl = append(uiEl, gloss.NewStyle().Width(m.Width).Margin(1, 0, 1, 0).Align(gloss.Center).Render("Please choose a license you would like to use for this project.\nA license of the type you choose will be created for you at the end of this program."))
+			uiEl = append(uiEl, m.List.View())
+		}
 	}
 	return gloss.JoinVertical(gloss.Center, uiEl...)
 }
@@ -172,9 +187,32 @@ func findLicenseType() string {
 	return ""
 }
 
-// func (m *License_model) show_license_list() {
-// 	m.List = list.New()
-// }
+func (m *License_model) show_license_list() (tea.Model, tea.Cmd) {
+	xs_licenses := []string{"MIT", "Apache 2.0", "BSD 3-Clause", "BSD 2-Clause", "GNU GPL v3", "ISC"}
+	xli_licenses := []lli.Item{}
+	for _, license := range xs_licenses {
+		xli_licenses = append(xli_licenses, lli.New_list_item(license))
+	}
+	listItems := make([]list.Item, len(xli_licenses))
+	for i, license := range xli_licenses {
+		listItems[i] = license
+	}
+	m.List = list.New(listItems, lli.CustomDelegate{}, m.Width, m.Height)
+	m.List.SetWidth(m.Width)
+	m.List.SetHeight(m.Height * 3 / 5)
+	m.toggle_show_list()
+	m.List.Title = "Available licenses:"
+	return m, nil
+}
+func (m *License_model) toggle_show_list() {
+	m.showList = !m.showList
+}
+
+//TODO: Send to next module. Save the data before sending
+
+//TODO: Create a custom help and keymap for the license list
+
+//TODO: Create stylings for all text in this model
 
 // func Generate_License_file(license_type string) {
 

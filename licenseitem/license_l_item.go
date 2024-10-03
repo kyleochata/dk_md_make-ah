@@ -39,9 +39,9 @@ func (d CustomDelegate) Render(w io.Writer, m list.Model, index int, item list.I
 	isSelected := index == m.Index()
 	var cursor string
 	if isSelected {
-		cursor = selectedTextStyle.Render("--> ")
+		cursor = selectedTextStyle.Render("\t--> ")
 	} else {
-		cursor = "    "
+		cursor = "\t    "
 	}
 	name := normalTextStyle.Render(i.Name)
 	if isSelected {
