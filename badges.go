@@ -10,6 +10,8 @@ import (
 	"github.com/kyleochata/md_maker/badge"
 )
 
+const Badge string = "badge"
+
 type Badge_model struct {
 	Answers
 	List         list.Model
@@ -68,7 +70,7 @@ func New_Badges_model(a Answers) tea.Model {
 	for i, item := range items {
 		li[i] = item
 	}
-	badges_picked := a.Responses["badge"]
+	badges_picked := a.Responses[Badge]
 	var badges_arr []badge.Item
 	if badges_picked == nil {
 		badges_picked = []badge.Item{}
@@ -114,7 +116,7 @@ func (m *Badge_model) TurnOffHelp() {
 
 // CHORE: Fix the args
 func (m *Badge_model) Send_to_Intro(a Answers) (tea.Model, tea.Cmd) {
-	m.Responses["badge"] = m.BadgeChoices
+	m.Responses[Badge] = m.BadgeChoices
 	m.TurnOffHelp()
 	return New_Intro_model(m.Answers), func() tea.Msg {
 		return tea.WindowSizeMsg{

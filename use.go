@@ -11,6 +11,8 @@ type Use_model struct {
 	TextArea textarea.Model
 }
 
+const Usage string = "use"
+
 func (m Use_model) Init() tea.Cmd { return nil }
 func (m Use_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -80,7 +82,7 @@ func (m Use_model) send_to_license() (tea.Model, tea.Cmd) {
 	}
 }
 func (m *Use_model) save_use_data() {
-	m.Responses["use"] = m.TextArea.Value()
+	m.Responses[Usage] = m.TextArea.Value()
 }
 func (m Use_model) titleText() gloss.Style {
 	// Define the style here

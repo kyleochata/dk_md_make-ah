@@ -27,6 +27,9 @@ func (m Wild_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+b":
 			m.save_wild_data()
 			return Send_to_Contributors(m.Answers)
+		case "ctrl+n":
+			m.save_wild_data()
+			return Send_to_final(m.Answers)
 		}
 	}
 	var cmd tea.Cmd
@@ -54,4 +57,7 @@ func (m *Wild_model) handleWindowResize(msg tea.WindowSizeMsg) {
 }
 func (m *Wild_model) save_wild_data() {
 	m.Responses[Wild] = m.textarea.Value()
+}
+func Send_to_final(a Answers) (tea.Model, tea.Cmd) {
+	return New_final_model(a), SendWindowMsg(a.Height, a.Width)
 }
