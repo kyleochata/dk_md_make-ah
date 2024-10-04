@@ -103,15 +103,19 @@ func New_has_License_model(a Answers, l_type string, make bool) tea.Model {
 	ta := textarea.New()
 	ta.SetWidth(a.Width)
 	ta.Focus()
-	content := readmeLicenseContent(l_type)
-	prevContent, ok := a.Responses["licenseContent"].(string)
+	prev_l_type, ok := a.Responses[License_t].(string)
+	if ok && prev_l_type != "" {
+		l_type = prev_l_type
+	}
+	prevContent, ok := a.Responses[License_c].(string)
+	var content string
 	if ok && prevContent != "" {
 		ta.SetValue(prevContent)
 	} else {
+		content = readmeLicenseContent(l_type)
 		ta.SetValue(content)
 	}
-
-	return Has_License_model{Answers: a, TextArea: ta, editContent: false, licenseType: l_type, makeFile: make, content: content}
+	return Has_License_model{Answers: a, TextArea: ta, editContent: false, licenseType: l_type, makeFile: make, content: ta.Value()}
 }
 func readmeLicenseContent(lt string) string {
 	var content string = ""
@@ -222,7 +226,7 @@ func (m *available_license_model) handleWindowResize(msg tea.WindowSizeMsg) {
 	}
 }
 func new_available_license_model(a Answers) tea.Model {
-	litems := loadLicenses()
+	litems := LoadLicenses()
 	log.Println(litems)
 	maxListHeight := a.Height / 3
 	if maxListHeight < 12 {
@@ -250,7 +254,7 @@ func New_license_from_list_model(a Answers, l_type string) (tea.Model, tea.Cmd) 
 	}
 }
 
-func loadLicenses() []list.Item {
+func LoadLicenses() []list.Item {
 	licenses, _ := cli.GetAvailableLicenses()
 	listItems := make([]list.Item, len(licenses))
 	for i, license := range licenses {
