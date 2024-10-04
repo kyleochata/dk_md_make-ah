@@ -23,6 +23,10 @@ type Contributor struct {
 	GitHub string `json:"html_url"`
 }
 
+const (
+	Contributor_l string = "contributorsList"
+)
+
 // type contributorsMsg struct {
 // 	contributors []Contributor
 // 	owner        string
@@ -152,7 +156,6 @@ func (m *Contributors_model) FetchContributorsCmd() {
 	}
 	m.contributors = contributors
 	m.owner = repoOwner
-
 }
 
 func (m Contributors_model) Init() tea.Cmd {
@@ -168,6 +171,8 @@ func (m Contributors_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
+		case "ctrl+b":
+			return m.send_to_license()
 		}
 		// default:
 		// 	log.Println("Msg: ", msg)
@@ -213,6 +218,15 @@ func (m *Contributors_model) popTableRows() {
 		})
 	}
 	m.table.SetRows(rows)
+}
+func (m *Contributors_model) save_contr_data() {
+	m.Responses[Contributor_l] = m.contributors
+}
+func (m Contributors_model) send_to_license() (tea.Model, tea.Cmd) {
+	m.save_contr_data()
+	licenseType := m.Responses[License_t].(string)
+	makeLicense := m.Responses[License_w].(bool)
+	return New_has_License_model(m.Answers, licenseType, makeLicense), SendWindowMsg(m.Height, m.Width)
 }
 
 // func (m Contributors_model) contributorsEqual(newContributors []Contributor) bool {
