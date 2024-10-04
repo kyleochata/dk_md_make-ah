@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"os/exec"
@@ -12,11 +13,12 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	gloss "github.com/charmbracelet/lipgloss"
 )
 
 type Contributor struct {
-	Login string `json:"login"`
-	Email string `json:"email,omitempty"`
+	Login  string `json:"login"`
+	GitHub string `json:"html_url"`
 }
 type contributorsMsg struct {
 	contributors []Contributor
@@ -46,6 +48,7 @@ func getRepoOwnerAndName() (string, string, error) {
 	cmd := exec.Command("git", "remote", "get-url", "origin")
 	output, err := cmd.Output()
 	if err != nil {
+		log.Println("Failed to get github repo url")
 		return "", "", fmt.Errorf("failed to get GitHub repo URL: %w", err)
 	}
 	// Parse the URL to extract the owner and repo name
@@ -60,10 +63,11 @@ func getRepoOwnerAndName() (string, string, error) {
 }
 
 // Get contributors using Github CLI if installed
-func fetchContributorsWithCLI(repoOwner, repoName string) ([]Contributor, error) {
+func fetchContributorsWithCLI() ([]Contributor, error) {
 	cmd := exec.Command("gh", "repo", "view", "--json", "collaborators", "--jq", ".collaborators[] | {login: .login, email: .email}")
 	output, err := cmd.Output()
 	if err != nil {
+		log.Println("failed to fetch with github cli")
 		return nil, fmt.Errorf("failed to fetch contributors using GitHub CLI: %w", err)
 	}
 
@@ -74,6 +78,7 @@ func fetchContributorsWithCLI(repoOwner, repoName string) ([]Contributor, error)
 			var contributor Contributor
 			err := json.Unmarshal([]byte(line), &contributor)
 			if err != nil {
+				log.Print("failed to parse contributors from gh cli")
 				return nil, fmt.Errorf("failed to parse contributor: %w", err)
 			}
 			contributors = append(contributors, contributor)
@@ -84,7 +89,8 @@ func fetchContributorsWithCLI(repoOwner, repoName string) ([]Contributor, error)
 
 // If no Github CLI, http.Get
 func fetchContributorsFromAPI(repoOwner, repoName string) ([]Contributor, error) {
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/contributors", repoOwner, repoName)
+	// url := fmt.Sprintf("https://api.github.com/repos/%s/%s/contributors", repoOwner, repoName)
+	url := "https://api.github.com/repos/kyleochata/Will-DO-Crush-your-goals/contributors"
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -102,9 +108,11 @@ func fetchContributorsFromAPI(repoOwner, repoName string) ([]Contributor, error)
 	if err != nil {
 		return nil, err
 	}
-
+	log.Println("resp body:", body)
 	var contributors []Contributor
 	err = json.Unmarshal(body, &contributors)
+	log.Println("Contributors:", contributors)
+
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +120,7 @@ func fetchContributorsFromAPI(repoOwner, repoName string) ([]Contributor, error)
 	return contributors, nil
 }
 
-func fetchContributorsCmd() tea.Cmd {
+func FetchContributorsCmd() tea.Cmd {
 	return func() tea.Msg {
 		if !isOnline() {
 			return errorMsg{err: fmt.Errorf("no internet connection")}
@@ -125,7 +133,7 @@ func fetchContributorsCmd() tea.Cmd {
 
 		var contributors []Contributor
 		if isGHCLIInstalled() {
-			contributors, err = fetchContributorsWithCLI(repoOwner, repoName)
+			contributors, err = fetchContributorsWithCLI()
 		} else {
 			contributors, err = fetchContributorsFromAPI(repoOwner, repoName)
 		}
@@ -139,10 +147,13 @@ func fetchContributorsCmd() tea.Cmd {
 }
 
 func (m Contributors_model) Init() tea.Cmd {
-	return fetchContributorsCmd()
+	return nil
 }
 func (m Contributors_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case contributorsMsg:
+		m.contributors = msg.contributors
+		return m, tea.ClearScreen
 	case tea.WindowSizeMsg:
 		m.handleWindowResize(msg)
 		return m, tea.ClearScreen
@@ -155,7 +166,11 @@ func (m Contributors_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 func (m Contributors_model) View() string {
-	return "from contributors"
+	uiEl := []string{gloss.NewStyle().Width(m.Width).Render("from contributors")}
+	for _, contributor := range m.contributors {
+		uiEl = append(uiEl, gloss.NewStyle().Align(gloss.Left).Render(gloss.JoinHorizontal(gloss.Left, contributor.Login+"\t", contributor.GitHub)))
+	}
+	return gloss.JoinVertical(gloss.Center, uiEl...)
 }
 func (m *Contributors_model) handleWindowResize(msg tea.WindowSizeMsg) {
 	m.Height, m.Width = msg.Height, msg.Width
