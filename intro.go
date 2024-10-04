@@ -11,6 +11,8 @@ type Intro_model struct {
 	TextArea ta.Model
 }
 
+const Intro string = "intro"
+
 func (m Intro_model) Init() tea.Cmd { return nil }
 func (m Intro_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -51,7 +53,7 @@ func New_Intro_model(a Answers) tea.Model {
 	ta.SetHeight(a.Height * 2 / 3)
 
 	// Ensure that the TextArea starts clean and only includes the intended intro text
-	if intro, ok := a.Responses["intro"].(string); ok {
+	if intro, ok := a.Responses[Intro].(string); ok {
 		ta.SetValue(intro)
 	}
 	ta.Focus()
@@ -70,7 +72,7 @@ func GetTextAreaValue(m Intro_model) string {
 }
 
 func Send_to_Installation(m Intro_model) (tea.Model, tea.Cmd) {
-	m.Responses["intro"] = GetTextAreaValue(m)
+	m.Responses[Intro] = GetTextAreaValue(m)
 	return New_Install_model(m.Answers), func() tea.Msg {
 		return tea.WindowSizeMsg{
 			Height: m.Height,

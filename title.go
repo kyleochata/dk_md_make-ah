@@ -12,7 +12,7 @@ type Answers struct {
 	Responses     map[string]any
 	Height, Width int
 }
-type Title struct {
+type Title_model struct {
 	Answers
 	TextInput  textinput.Model
 	FocusState FocusState
@@ -20,12 +20,13 @@ type Title struct {
 type FocusState int
 
 const (
+	Title            string     = "title"
 	FocusState_Input FocusState = iota
 	FocusState_Title
 )
 
-func (t Title) Init() tea.Cmd { return nil }
-func (t Title) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (t Title_model) Init() tea.Cmd { return nil }
+func (t Title_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		t.Height, t.Width = msg.Height, msg.Width
@@ -51,7 +52,7 @@ func (t Title) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	return t, nil
 }
-func (t Title) View() string {
+func (t Title_model) View() string {
 	uiEl := []string{t.titleView()}
 	uiEl = append(uiEl, t.textInputView())
 	uiEl = append(uiEl, "Press Enter to progress")
@@ -65,17 +66,17 @@ func New_Title_model(a Answers) tea.Model {
 	ti := textinput.New()
 	//First model after open model. Need to init the response map if first visit to title model
 	if a.Responses == nil {
-		a.Responses = map[string]any{"title": nil}
+		a.Responses = map[string]any{Title: nil}
 	}
-	if a.Responses["title"] != nil {
-		ti.SetValue(a.Responses["title"].(string))
+	if a.Responses[Title] != nil {
+		ti.SetValue(a.Responses[Title].(string))
 	}
 	ti.Focus()
-	return Title{Answers: a, TextInput: ti, FocusState: FocusState_Input}
+	return Title_model{Answers: a, TextInput: ti, FocusState: FocusState_Input}
 }
 
-func (t Title) Send_to_Badges() (tea.Model, tea.Cmd) {
-	t.Responses["title"] = t.TextInput.Value()
+func (t Title_model) Send_to_Badges() (tea.Model, tea.Cmd) {
+	t.Responses[Title] = t.TextInput.Value()
 	return New_Badges_model(t.Answers), func() tea.Msg {
 		return tea.WindowSizeMsg{
 			Height: t.Height,
@@ -84,7 +85,7 @@ func (t Title) Send_to_Badges() (tea.Model, tea.Cmd) {
 	}
 }
 
-func (t Title) toggleFocus() {
+func (t Title_model) toggleFocus() {
 	if t.FocusState == FocusState_Input {
 		t.FocusState = FocusState_Title
 		t.TextInput.Blur()
@@ -94,14 +95,14 @@ func (t Title) toggleFocus() {
 	}
 }
 
-func (t Title) titleView() string {
+func (t Title_model) titleView() string {
 	s := "What would you like as the title of this README.md?"
 	if t.FocusState == FocusState_Title {
 		return t.titleTextFocus().Render(s)
 	}
 	return t.titleText().Render(s)
 }
-func (t Title) textInputView() string {
+func (t Title_model) textInputView() string {
 	var s strings.Builder
 	s.WriteString(t.TextInput.View())
 	if t.FocusState == FocusState_Input {
@@ -112,7 +113,7 @@ func (t Title) textInputView() string {
 }
 
 // ============style===================
-func (t Title) titleTextFocus() gloss.Style {
+func (t Title_model) titleTextFocus() gloss.Style {
 	// Define the style here
 	return gloss.NewStyle().
 		Bold(true).
@@ -123,7 +124,7 @@ func (t Title) titleTextFocus() gloss.Style {
 		Width(t.Width).
 		Height(t.Height / 4)
 }
-func (t Title) titleText() gloss.Style {
+func (t Title_model) titleText() gloss.Style {
 	return gloss.NewStyle().
 		Bold(true).
 		Foreground(gloss.Color("12")).
@@ -133,7 +134,7 @@ func (t Title) titleText() gloss.Style {
 		Width(t.Width).
 		Height(t.Height / 4)
 }
-func (t Title) textInputFocus() gloss.Style {
+func (t Title_model) textInputFocus() gloss.Style {
 	return gloss.NewStyle().
 		Foreground(gloss.Color("FFFFFF")).
 		Padding(1, 1, 1, 1).
@@ -142,7 +143,7 @@ func (t Title) textInputFocus() gloss.Style {
 		Width(t.Width / 2).
 		Height(t.Height / 4)
 }
-func (t Title) textInput() gloss.Style {
+func (t Title_model) textInput() gloss.Style {
 	return gloss.NewStyle().
 		Foreground(gloss.Color("B2BEB5")).
 		Padding(1, 1, 1, 1).

@@ -11,7 +11,9 @@ import (
 )
 
 const (
-	fs_im_list fs_im = iota
+	Install_user    string = "install"
+	Install_choices string = "installChoices"
+	fs_im_list      fs_im  = iota
 	fs_im_ta
 )
 
@@ -121,18 +123,18 @@ func New_Install_model(a Answers) tea.Model {
 	ta := textarea.New()
 	ta.SetHeight(a.Height / 2)
 	ta.SetWidth(a.Width)
-	if val, ok := a.Responses["intro"]; ok {
+	if val, ok := a.Responses[Install_user]; ok {
 		ta.SetValue(val.(string))
 	}
-	// if a.Responses["intro"] != "" {
-	// 	additional_install_steps_s := a.Responses["intro"].(string)
+	// if a.Responses[Install_user] != "" {
+	// 	additional_install_steps_s := a.Responses[Install_user].(string)
 	// 	ta.SetValue(additional_install_steps_s)
 	// }
 	xs_install_choices := []string{}
 	// if a.Responses["genIntro"] != nil {
 	// 	xs_install_choices = a.Responses["genIntro"].([]string)
 	// }
-	if choices, ok := a.Responses["genIntro"]; ok {
+	if choices, ok := a.Responses[Install_choices]; ok {
 		xs_install_choices = choices.([]string)
 	}
 	ta.Blur()
@@ -196,8 +198,8 @@ func (m *Installation_model) Send_to_Intro() (tea.Model, tea.Cmd) {
 	}
 }
 func (m *Installation_model) save_install_data() {
-	m.Responses["install"] = m.TextArea.Value()
-	m.Responses["genIntro"] = m.InstallChoices
+	m.Responses[Install_user] = m.TextArea.Value()
+	m.Responses[Install_choices] = m.InstallChoices
 }
 
 func (m *Installation_model) Send_to_Usage() (tea.Model, tea.Cmd) {
