@@ -9,9 +9,11 @@ import (
 	"net/http"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	gloss "github.com/charmbracelet/lipgloss"
 )
@@ -20,18 +22,23 @@ type Contributor struct {
 	Login  string `json:"login"`
 	GitHub string `json:"html_url"`
 }
-type contributorsMsg struct {
-	contributors []Contributor
-}
+
+// type contributorsMsg struct {
+// 	contributors []Contributor
+// 	owner        string
+// }
 
 type Contributors_model struct {
 	Answers
 	contributors []Contributor
-	errorMessage string
+	// errorMessage string
+	table table.Model
+	owner string
 }
-type errorMsg struct {
-	err error
-}
+
+// type errorMsg struct {
+// 	err error
+// }
 
 func isOnline() bool {
 	_, err := net.DialTimeout("tcp", "github.com:80", 3*time.Second)
@@ -108,10 +115,10 @@ func fetchContributorsFromAPI(repoOwner, repoName string) ([]Contributor, error)
 	if err != nil {
 		return nil, err
 	}
-	log.Println("resp body:", body)
+	// log.Println("resp body:", body)
 	var contributors []Contributor
 	err = json.Unmarshal(body, &contributors)
-	log.Println("Contributors:", contributors)
+	// log.Println("Contributors:", contributors)
 
 	if err != nil {
 		return nil, err
@@ -120,30 +127,32 @@ func fetchContributorsFromAPI(repoOwner, repoName string) ([]Contributor, error)
 	return contributors, nil
 }
 
-func FetchContributorsCmd() tea.Cmd {
-	return func() tea.Msg {
-		if !isOnline() {
-			return errorMsg{err: fmt.Errorf("no internet connection")}
-		}
-
-		repoOwner, repoName, err := getRepoOwnerAndName()
-		if err != nil {
-			return errorMsg{err: err}
-		}
-
-		var contributors []Contributor
-		if isGHCLIInstalled() {
-			contributors, err = fetchContributorsWithCLI()
-		} else {
-			contributors, err = fetchContributorsFromAPI(repoOwner, repoName)
-		}
-
-		if err != nil {
-			return errorMsg{err: err}
-		}
-
-		return contributorsMsg{contributors: contributors}
+func (m *Contributors_model) FetchContributorsCmd() {
+	if !isOnline() {
+		log.Println("Not connected to internet")
+		return
 	}
+
+	repoOwner, repoName, err := getRepoOwnerAndName()
+	if err != nil {
+		log.Println("Unable to get repoOwner and name")
+		return
+	}
+
+	var contributors []Contributor
+	if isGHCLIInstalled() {
+		contributors, err = fetchContributorsWithCLI()
+	} else {
+		contributors, err = fetchContributorsFromAPI(repoOwner, repoName)
+	}
+
+	if err != nil {
+		log.Println("Unable to use API or CLI to get Github contributor info")
+		return
+	}
+	m.contributors = contributors
+	m.owner = repoOwner
+
 }
 
 func (m Contributors_model) Init() tea.Cmd {
@@ -151,9 +160,7 @@ func (m Contributors_model) Init() tea.Cmd {
 }
 func (m Contributors_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case contributorsMsg:
-		m.contributors = msg.contributors
-		return m, tea.ClearScreen
+
 	case tea.WindowSizeMsg:
 		m.handleWindowResize(msg)
 		return m, tea.ClearScreen
@@ -162,19 +169,63 @@ func (m Contributors_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 		}
+		// default:
+		// 	log.Println("Msg: ", msg)
 	}
 	return m, nil
 }
 func (m Contributors_model) View() string {
 	uiEl := []string{gloss.NewStyle().Width(m.Width).Render("from contributors")}
-	for _, contributor := range m.contributors {
-		uiEl = append(uiEl, gloss.NewStyle().Align(gloss.Left).Render(gloss.JoinHorizontal(gloss.Left, contributor.Login+"\t", contributor.GitHub)))
-	}
+
+	uiEl = append(uiEl, gloss.NewStyle().Width(m.Width).Render(m.table.View()))
 	return gloss.JoinVertical(gloss.Center, uiEl...)
 }
 func (m *Contributors_model) handleWindowResize(msg tea.WindowSizeMsg) {
 	m.Height, m.Width = msg.Height, msg.Width
+	m.table.SetHeight(m.Height)
+	m.table.SetWidth(m.Width - 4)
 }
 func New_Contributors_model(a Answers) tea.Model {
-	return Contributors_model{Answers: a}
+	t := table.New()
+	xs_column_header := []string{"Index", "Username", "Owner", "GitHub URL"}
+	x_tableCol_header := make([]table.Column, len(xs_column_header))
+	for i, header := range xs_column_header {
+		x_tableCol_header[i] = table.Column{Title: header, Width: (a.Width / len(xs_column_header)) - 4}
+	}
+
+	t.SetColumns(x_tableCol_header)
+	t.SetHeight(a.Height / 3)
+	t.SetWidth(a.Width - 2)
+	model := Contributors_model{Answers: a, table: t}
+	model.FetchContributorsCmd()
+	model.popTableRows()
+	log.Println("Owner: ", model.owner)
+	return model
 }
+func (m *Contributors_model) popTableRows() {
+	var rows []table.Row
+	for i, contributor := range m.contributors {
+		rows = append(rows, table.Row{
+			fmt.Sprintf("%d", i+1),
+			contributor.Login,
+			strconv.FormatBool(contributor.Login == m.owner),
+			contributor.GitHub,
+		})
+	}
+	m.table.SetRows(rows)
+}
+
+// func (m Contributors_model) contributorsEqual(newContributors []Contributor) bool {
+// 	// Check if the lengths of the slices are different
+// 	if len(m.contributors) != len(newContributors) {
+// 		return false
+// 	}
+
+// 	// Compare contents of the slices
+// 	for i := range m.contributors {
+// 		if m.contributors[i] != newContributors[i] {
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }

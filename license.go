@@ -51,6 +51,8 @@ func (m Has_License_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return Send_to_Contributors(m.Answers)
 			}
 		}
+		// default:
+		// 	log.Println("Msg from Lic: ", msg)
 	}
 	if m.editContent {
 		var cmd tea.Cmd
@@ -81,7 +83,7 @@ func (m *Has_License_model) save_license_data() {
 	m.Responses[License_w] = m.makeFile
 }
 func Send_to_Contributors(a Answers) (tea.Model, tea.Cmd) {
-	return New_Contributors_model(a), tea.Batch(FetchContributorsCmd(), SendWindowMsg(a.Height, a.Width))
+	return New_Contributors_model(a), SendWindowMsg(a.Height, a.Width)
 }
 
 func (m *Has_License_model) handleWindowResize(msg tea.WindowSizeMsg) {
