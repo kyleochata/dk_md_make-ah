@@ -29,7 +29,7 @@ func (m Installation_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.windowResize(msg)
-		return m, nil
+		return m, tea.ClearScreen
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -95,7 +95,7 @@ func (m Installation_model) View() string {
 		uiEl = append(uiEl, m.titleStyle().Align(gloss.Center).Render(s))
 	}
 
-	return gloss.JoinVertical(gloss.Center, uiEl...)
+	return gloss.NewStyle().Height(m.Height).Render(gloss.JoinVertical(gloss.Center, uiEl...))
 }
 
 // =========Helper==================

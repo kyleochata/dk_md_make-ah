@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
+	gloss "github.com/charmbracelet/lipgloss"
 	cli "github.com/kyleochata/md_maker/licenseitem"
 )
 
@@ -27,7 +28,7 @@ func (m Has_License_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.handleWindowResize(msg)
-		return m, nil
+		return m, tea.ClearScreen
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -35,6 +36,8 @@ func (m Has_License_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "tab":
 			m.toggleTAFocus()
 			return m, nil
+		case "ctrl+l":
+			return new_available_license_model(m.Answers), nil
 		}
 	}
 	if m.editContent {
@@ -47,10 +50,18 @@ func (m Has_License_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 func (m Has_License_model) View() string {
 	var b strings.Builder
-	b.WriteString(m.content + "\n")
-	b.WriteString(m.licenseType)
-
-	return b.String()
+	b.WriteString(gloss.NewStyle().Margin(1, 0, 1, 0).Render("Edit License section of README\n"))
+	b.WriteString(gloss.NewStyle().Margin(1, 0, 1, 0).Render(m.TextArea.View()))
+	b.WriteString("Tab: Review Changes | Ctrl+L: Change License |Ctrl+C: Quit")
+	if !m.editContent {
+		b.Reset()
+		b.WriteString(fmt.Sprintf("Found a %s type in your current working directory\n", m.licenseType))
+		b.WriteString("The below content will be added to the License section of the README\n")
+		b.WriteString(m.contentStyle() + "\n")
+		b.WriteString("Tab: Edit license content | Ctrl+L: Change license type\n")
+		b.WriteString("Ctrl+C: Quit | Ctrl+N: Next section")
+	}
+	return gloss.NewStyle().Width(m.Width).Align(gloss.Center).Render(b.String())
 }
 
 func (m *Has_License_model) handleWindowResize(msg tea.WindowSizeMsg) {
@@ -59,12 +70,13 @@ func (m *Has_License_model) handleWindowResize(msg tea.WindowSizeMsg) {
 }
 
 func (m *Has_License_model) toggleTAFocus() {
-	m.editContent = !m.editContent
-	if !m.editContent {
+	if m.editContent {
+		m.content = m.TextArea.Value()
 		m.TextArea.Blur()
 	} else {
 		m.TextArea.Focus()
 	}
+	m.editContent = !m.editContent
 }
 
 func New_has_License_model(a Answers, l_type string, make bool) tea.Model {
@@ -84,9 +96,13 @@ func New_has_License_model(a Answers, l_type string, make bool) tea.Model {
 func readmeLicenseContent(lt string) string {
 	var content string = ""
 	if lt != "" {
-		content = fmt.Sprintf("##%s\n>\n> Please review the %s file in this repository\nPlease click on the badge at the top of the README for additional information.", lt, strings.ToUpper(lt))
+		content = fmt.Sprintf("##License\n\n> %s\n>\n> Please review the %s file in this repository\nPlease click on the badge at the top of the README for additional information.", lt, strings.ToUpper(lt))
 	}
 	return content
+}
+
+func (m Has_License_model) contentStyle() string {
+	return gloss.NewStyle().Align(gloss.Left).Border(gloss.RoundedBorder()).Width(m.Width-4).Margin(1, 0, 1, 0).Render(m.content)
 }
 
 type Fail_License_check_model struct {
@@ -158,7 +174,7 @@ func (m available_license_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.handleWindowResize(msg)
-		return m, nil
+		return m, tea.ClearScreen
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -176,10 +192,14 @@ func (m available_license_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 func (m available_license_model) View() string {
-	return m.List.View()
+	return gloss.NewStyle().Height(m.Height).Render(m.List.View())
 }
 func (m *available_license_model) handleWindowResize(msg tea.WindowSizeMsg) {
 	m.Height, m.Width = msg.Height, msg.Width
+	maxListHeight := m.Height / 3
+	if maxListHeight < 12 {
+		maxListHeight = 12
+	}
 }
 func new_available_license_model(a Answers) tea.Model {
 	litems := loadLicenses()

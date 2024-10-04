@@ -17,7 +17,8 @@ func main() {
 	log.SetOutput(logFile)
 	log.Println("test from main")
 	// p := tea.NewProgram(InitialModel(), tea.WithAltScreen())
-	p := tea.NewProgram(New_Title_model(Answers{}))
+	p := tea.NewProgram(New_Title_model(Answers{}), tea.WithAltScreen())
+	// p := tea.NewProgram(New_Title_model(Answers{}))
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error at launch:\t %v", err)
 		os.Exit(1)

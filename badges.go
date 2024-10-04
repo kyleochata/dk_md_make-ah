@@ -24,13 +24,16 @@ func (m Badge_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		lh := m.Height * 2 / 3
 		m.List.SetHeight(lh)
 		m.List.SetWidth(m.Width)
-		return m, nil
+		return m, tea.ClearScreen
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
 		case "enter":
 			m.HandleSelectBadge()
+			// Ensure the list height is updated after selection
+			lh := m.Height * 2 / 3
+			m.List.SetHeight(lh)
 			return m, nil
 
 		case "ctrl+n":
@@ -50,7 +53,7 @@ func (m Badge_model) View() string {
 	badgeEl := []string{}
 	for _, chosenBadge := range m.BadgeChoices {
 		s := fmt.Sprintf("%s\t", chosenBadge.Name)
-		badgeEl = append(badgeEl, gloss.NewStyle().Width(m.Width).Render(s))
+		badgeEl = append(badgeEl, gloss.NewStyle().Render(s))
 	}
 	uiEl = append(uiEl, gloss.JoinHorizontal(gloss.Center, badgeEl...))
 	uiEl = append(uiEl, m.List.View())
