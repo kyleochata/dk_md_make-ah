@@ -163,7 +163,6 @@ func (m Contributors_model) Init() tea.Cmd {
 }
 func (m Contributors_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-
 	case tea.WindowSizeMsg:
 		m.handleWindowResize(msg)
 		return m, tea.ClearScreen
@@ -174,11 +173,48 @@ func (m Contributors_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+b":
 			return m.send_to_license()
 		}
-		// default:
-		// 	log.Println("Msg: ", msg)
 	}
+
+	// Let the table handle its own input, including arrow key navigation
+	var cmd tea.Cmd
+	if m.table, cmd = m.table.Update(msg); cmd != nil {
+		return m, cmd
+	}
+
 	return m, nil
 }
+
+// func (m Contributors_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+// 	switch msg := msg.(type) {
+
+//		case tea.WindowSizeMsg:
+//			m.handleWindowResize(msg)
+//			return m, tea.ClearScreen
+//		case tea.KeyMsg:
+//			switch msg.String() {
+//			case "ctrl+c":
+//				return m, tea.Quit
+//			case "ctrl+b":
+//				return m.send_to_license()
+//			case "up":
+//				// Move selection up
+//				if m.table.Index() > 0 {
+//					m.table.SetIndex(m.table.Index() - 1)
+//				}
+//				return m, nil
+//			case "down":
+//				// Move selection down
+//				if m.table.Index() < len(m.contributors)-1 {
+//					m.table.SetIndex(m.table.Index() + 1)
+//				}
+//			}
+//		}
+//		var cmd tea.Cmd
+//		if m.table, cmd = m.table.Update(msg); cmd != nil {
+//			return m, cmd
+//		}
+//		return m, nil
+//	}
 func (m Contributors_model) View() string {
 	uiEl := []string{gloss.NewStyle().Width(m.Width).Render("from contributors")}
 
@@ -192,6 +228,7 @@ func (m *Contributors_model) handleWindowResize(msg tea.WindowSizeMsg) {
 }
 func New_Contributors_model(a Answers) tea.Model {
 	t := table.New()
+	t.Focus() //table don't work unless you focus!
 	xs_column_header := []string{"Index", "Username", "Owner", "GitHub URL"}
 	x_tableCol_header := make([]table.Column, len(xs_column_header))
 	for i, header := range xs_column_header {

@@ -51,8 +51,6 @@ func (m Has_License_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return Send_to_Contributors(m.Answers)
 			}
 		}
-		// default:
-		// 	log.Println("Msg from Lic: ", msg)
 	}
 	if m.editContent {
 		var cmd tea.Cmd
