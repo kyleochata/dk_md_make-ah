@@ -16,7 +16,7 @@ func (m Use_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.handleWindowResize(msg)
-		return m, nil
+		return m, tea.ClearScreen
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -66,10 +66,16 @@ func (m *Use_model) Send_to_Installation() (tea.Model, tea.Cmd) {
 }
 func (m Use_model) send_to_license() (tea.Model, tea.Cmd) {
 	m.save_use_data()
-	return New_License_model(m.Answers), func() tea.Msg {
-		return tea.WindowSizeMsg{
-			Height: m.Height,
-			Width:  m.Width,
+	//check if we have already visited the license model and need to make a LICENSE file
+	make, _ := m.Responses[License_w].(bool)
+	if LicenseFileExists() {
+		return New_has_License_model(m.Answers, FindLicenseType(), make), SendWindowMsg(m.Height, m.Width)
+	} else {
+		return New_Fail_License_check_model(m.Answers), func() tea.Msg {
+			return tea.WindowSizeMsg{
+				Height: m.Height,
+				Width:  m.Width,
+			}
 		}
 	}
 }

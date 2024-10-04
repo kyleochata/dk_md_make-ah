@@ -15,7 +15,8 @@ func (m Intro_model) Init() tea.Cmd { return nil }
 func (m Intro_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.Height, m.Width = msg.Height, msg.Width
+		m.handleWindowResize(msg)
+		return m, tea.ClearScreen
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
@@ -36,10 +37,14 @@ func (m Intro_model) View() string {
 	uiEl = append(uiEl, m.TitleRender())
 	uiEl = append(uiEl, m.TextArea.View())
 	uiEl = append(uiEl, m.FooterRender())
-	return gloss.JoinVertical(gloss.Center, uiEl...)
+	return gloss.NewStyle().Height(m.Height).Render(gloss.JoinVertical(gloss.Center, uiEl...))
 }
 
 // ====================Helper====================================
+func (m *Intro_model) handleWindowResize(msg tea.WindowSizeMsg) {
+	m.Height, m.Width = msg.Height, msg.Width
+	m.TextArea.SetWidth(m.Width - 4)
+}
 func New_Intro_model(a Answers) tea.Model {
 	ta := ta.New()
 	ta.SetWidth(a.Width - 3)

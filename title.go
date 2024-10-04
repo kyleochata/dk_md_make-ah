@@ -29,7 +29,7 @@ func (t Title) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		t.Height, t.Width = msg.Height, msg.Width
-		return t, nil
+		return t, tea.ClearScreen
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "tab", "shift+tab":

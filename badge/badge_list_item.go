@@ -25,6 +25,7 @@ func (i Item) Description() string {
 		return ""
 	}
 	return i.Badge
+
 }
 func (i Item) FilterValue() string { return i.Name }
 func NewItem(name, badge string) Item {
@@ -32,11 +33,11 @@ func NewItem(name, badge string) Item {
 }
 
 var (
-	normalTextStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("252"))
-	selectedTextStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Bold(true)
-	normalBadgeStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
-	selectedBadgeStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("13"))
-	badgePickedStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("82")).Background(lipgloss.Color("252"))
+	normalTextStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("252"))
+	selectedTextStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("205")).Bold(true)
+	// normalBadgeStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("245"))
+	// selectedBadgeStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("13"))
+	badgePickedStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("82")).Background(lipgloss.Color("252"))
 )
 
 type CustomDelegate struct{}
@@ -68,17 +69,20 @@ func (d CustomDelegate) Render(w io.Writer, m list.Model, index int, item list.I
 	}
 	// Apply styles based on whether the item is selected or not
 	name := normalTextStyle.Render(i.Name)
-	badge := normalBadgeStyle.Render(i.Badge)
+	// badge := normalBadgeStyle.Render(i.Badge)
 	if i.BadgePicked {
 		name = badgePickedStyle.Render(i.Name)
-		badge = badgePickedStyle.Render(i.Badge)
+		// badge = badgePickedStyle.Render(i.Badge)
 	}
 
 	if isSelected {
 		name = selectedTextStyle.Render(i.Name)
-		badge = selectedBadgeStyle.Render(i.Badge)
+		// badge = selectedBadgeStyle.Render(i.Badge)
+	}
+	if i.IsSection {
+		name = lipgloss.NewStyle().Foreground(lipgloss.Color("#ffcc00")).Render(i.Name)
 	}
 
 	// Render the combined item output
-	fmt.Fprintf(w, "%s  %s\t%s", cursor, name, badge) // Render name and badge with a tab for spacing
+	fmt.Fprintf(w, "%s\t\t%s", cursor, name) // Render name and badge with a tab for spacing
 }
