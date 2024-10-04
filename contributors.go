@@ -195,6 +195,8 @@ func (m Contributors_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.focus == con_github || m.focus == con_user {
 				return m.toggleTextInputFocus()
 			}
+		case "ctrl+n":
+			return m.send_to_wild()
 		}
 	}
 	var cmd tea.Cmd
@@ -228,6 +230,10 @@ func (m Contributors_model) View() string {
 	return gloss.JoinVertical(gloss.Center, uiEl...)
 
 }
+func (m Contributors_model) send_to_wild() (tea.Model, tea.Cmd) {
+	m.save_contr_data()
+	return New_wild_model(m.Answers), SendWindowMsg(m.Height, m.Width)
+}
 func (m *Contributors_model) toggleTextInputFocus() (tea.Model, tea.Cmd) {
 	if m.focus == con_user {
 		m.user_ti.Blur()
@@ -249,13 +255,13 @@ func (m *Contributors_model) showEditInTable() (tea.Model, tea.Cmd) {
 		m.contributors[m.rowNum].Login = editName
 		m.contributors[m.rowNum].GitHub = newURL
 	}
-	log.Println("focus b4 change: ", m.focus)
+
 	m.focus = con_table
 	m.github_ti.Blur()
 	m.user_ti.Blur()
 	m.popTableRows()
 	m.table.Focus()
-	return m, tea.ClearScreen
+	return m, tea.ClearScreen //ti's will remain if m, nil
 }
 func (m *Contributors_model) handleTableSelection() (tea.Model, tea.Cmd) {
 	selected := m.table.SelectedRow()
