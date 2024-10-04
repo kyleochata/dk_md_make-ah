@@ -15,7 +15,7 @@ func main() {
 	}
 	defer logFile.Close()
 	log.SetOutput(logFile)
-	log.Println("test from main")
+	// log.Println("test from main")
 	// p := tea.NewProgram(InitialModel(), tea.WithAltScreen())
 	p := tea.NewProgram(New_Title_model(Answers{}), tea.WithAltScreen())
 	// p := tea.NewProgram(New_Title_model(Answers{}))

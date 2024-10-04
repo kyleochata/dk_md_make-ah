@@ -43,7 +43,7 @@ func (m Has_License_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.toggleTAFocus()
 			return m, nil
 		case "ctrl+l":
-			m.Responses["licenseType"] = m.licenseType
+			m.save_license_data()
 			return new_available_license_model(m.Answers), nil
 		case "ctrl+n":
 			if !m.editContent {
@@ -51,6 +51,8 @@ func (m Has_License_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return Send_to_Contributors(m.Answers)
 			}
 		}
+		// default:
+		// 	log.Println("Msg from Lic: ", msg)
 	}
 	if m.editContent {
 		var cmd tea.Cmd
@@ -103,13 +105,11 @@ func New_has_License_model(a Answers, l_type string, make bool) tea.Model {
 	ta := textarea.New()
 	ta.SetWidth(a.Width)
 	ta.Focus()
-	prev_l_type, ok := a.Responses[License_t].(string)
-	if ok && prev_l_type != "" {
-		l_type = prev_l_type
-	}
+	prev_l_type, _ := a.Responses[License_t].(string)
 	prevContent, ok := a.Responses[License_c].(string)
 	var content string
-	if ok && prevContent != "" {
+	//previous content is there and we aren't the model we are making has the same license type as our response, we want to give ta the content that the user edited.
+	if ok && prevContent != "" && prev_l_type == l_type {
 		ta.SetValue(prevContent)
 	} else {
 		content = readmeLicenseContent(l_type)
