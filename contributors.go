@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/table"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	gloss "github.com/charmbracelet/lipgloss"
 )
@@ -27,17 +28,28 @@ const (
 	Contributor_l string = "contributorsList"
 )
 
-// type contributorsMsg struct {
-// 	contributors []Contributor
-// 	owner        string
-// }
+//	type contributorsMsg struct {
+//		contributors []Contributor
+//		owner        string
+//	}
+type con_fs int
+
+const (
+	con_table con_fs = iota
+	con_user
+	con_github
+)
 
 type Contributors_model struct {
 	Answers
 	contributors []Contributor
 	// errorMessage string
-	table table.Model
-	owner string
+	table     table.Model
+	owner     string
+	user_ti   textinput.Model
+	github_ti textinput.Model
+	focus     con_fs
+	rowNum    int
 }
 
 // type errorMsg struct {
@@ -163,7 +175,6 @@ func (m Contributors_model) Init() tea.Cmd {
 }
 func (m Contributors_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-
 	case tea.WindowSizeMsg:
 		m.handleWindowResize(msg)
 		return m, tea.ClearScreen
@@ -173,17 +184,97 @@ func (m Contributors_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "ctrl+b":
 			return m.send_to_license()
+		case "enter":
+			if m.focus == con_table {
+				return m.handleTableSelection()
+			}
+			if m.focus == con_github || m.focus == con_user {
+				return m.showEditInTable()
+			}
+		case "tab":
+			if m.focus == con_github || m.focus == con_user {
+				return m.toggleTextInputFocus()
+			}
+		case "ctrl+n":
+			return m.send_to_wild()
 		}
-		// default:
-		// 	log.Println("Msg: ", msg)
 	}
+	var cmd tea.Cmd
+	if m.focus == con_table {
+		if m.table, cmd = m.table.Update(msg); cmd != nil {
+			return m, cmd
+		}
+	}
+	if m.focus == con_user {
+		if m.user_ti, cmd = m.user_ti.Update(msg); cmd != nil {
+			return m, cmd
+		}
+	}
+	if m.focus == con_github {
+		if m.github_ti, cmd = m.github_ti.Update(msg); cmd != nil {
+			return m, cmd
+		}
+	}
+
 	return m, nil
 }
 func (m Contributors_model) View() string {
 	uiEl := []string{gloss.NewStyle().Width(m.Width).Render("from contributors")}
 
-	uiEl = append(uiEl, gloss.NewStyle().Width(m.Width).Render(m.table.View()))
+	uiEl = append(uiEl, gloss.NewStyle().Width(m.Width).Height(m.Height/2).Render(m.table.View()))
+	if m.focus != con_table {
+		// uiEl = append(uiEl, gloss.JoinHorizontal(gloss.Center, m.user_ti.View(), m.github_ti.View()))
+		uiEl = append(uiEl, m.user_ti.View())
+		uiEl = append(uiEl, m.github_ti.View())
+	}
 	return gloss.JoinVertical(gloss.Center, uiEl...)
+
+}
+func (m Contributors_model) send_to_wild() (tea.Model, tea.Cmd) {
+	m.save_contr_data()
+	return New_wild_model(m.Answers), SendWindowMsg(m.Height, m.Width)
+}
+func (m *Contributors_model) toggleTextInputFocus() (tea.Model, tea.Cmd) {
+	if m.focus == con_user {
+		m.user_ti.Blur()
+		m.github_ti.Focus()
+		m.focus = con_github
+		return m, nil
+	}
+	m.github_ti.Blur()
+	m.user_ti.Focus()
+	m.focus = con_user
+	return m, nil
+}
+func (m *Contributors_model) showEditInTable() (tea.Model, tea.Cmd) {
+	editName := m.user_ti.Value()
+	newURL := m.github_ti.Value()
+	if editName == "" && newURL == "" {
+		m.contributors = append(m.contributors[:m.rowNum], m.contributors[m.rowNum+1:]...)
+	} else {
+		m.contributors[m.rowNum].Login = editName
+		m.contributors[m.rowNum].GitHub = newURL
+	}
+
+	m.focus = con_table
+	m.github_ti.Blur()
+	m.user_ti.Blur()
+	m.popTableRows()
+	m.table.Focus()
+	return m, tea.ClearScreen //ti's will remain if m, nil
+}
+func (m *Contributors_model) handleTableSelection() (tea.Model, tea.Cmd) {
+	selected := m.table.SelectedRow()
+	rowNum, _ := strconv.Atoi(selected[0])
+	m.rowNum = rowNum - 1
+	m.user_ti, m.github_ti = textinput.New(), textinput.New()
+	m.user_ti.SetValue(selected[1])
+	m.user_ti.Focus()
+	m.github_ti.SetValue(selected[len(selected)-1])
+	m.github_ti.Blur()
+	m.focus = con_user
+	m.table.Blur()
+	return m, nil
 }
 func (m *Contributors_model) handleWindowResize(msg tea.WindowSizeMsg) {
 	m.Height, m.Width = msg.Height, msg.Width
@@ -192,6 +283,7 @@ func (m *Contributors_model) handleWindowResize(msg tea.WindowSizeMsg) {
 }
 func New_Contributors_model(a Answers) tea.Model {
 	t := table.New()
+	t.Focus() //table don't work unless you focus!
 	xs_column_header := []string{"Index", "Username", "Owner", "GitHub URL"}
 	x_tableCol_header := make([]table.Column, len(xs_column_header))
 	for i, header := range xs_column_header {
@@ -204,7 +296,6 @@ func New_Contributors_model(a Answers) tea.Model {
 	model := Contributors_model{Answers: a, table: t}
 	model.FetchContributorsCmd()
 	model.popTableRows()
-	log.Println("Owner: ", model.owner)
 	return model
 }
 func (m *Contributors_model) popTableRows() {
