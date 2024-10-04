@@ -14,6 +14,12 @@ import (
 	cli "github.com/kyleochata/md_maker/licenseitem"
 )
 
+const (
+	License_t string = "licenseType"
+	License_c string = "licenseContent"
+	License_w string = "createLicenseFile"
+)
+
 type Has_License_model struct {
 	Answers
 	licenseType string
@@ -37,7 +43,13 @@ func (m Has_License_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.toggleTAFocus()
 			return m, nil
 		case "ctrl+l":
+			m.Responses["licenseType"] = m.licenseType
 			return new_available_license_model(m.Answers), nil
+		case "ctrl+n":
+			if !m.editContent {
+				m.save_license_data()
+				return Send_to_Contributors(m.Answers)
+			}
 		}
 	}
 	if m.editContent {
@@ -62,6 +74,14 @@ func (m Has_License_model) View() string {
 		b.WriteString("Ctrl+C: Quit | Ctrl+N: Next section")
 	}
 	return gloss.NewStyle().Width(m.Width).Align(gloss.Center).Render(b.String())
+}
+func (m *Has_License_model) save_license_data() {
+	m.Responses[License_t] = m.licenseType
+	m.Responses[License_c] = m.content
+	m.Responses[License_w] = m.makeFile
+}
+func Send_to_Contributors(a Answers) (tea.Model, tea.Cmd) {
+	return New_Contributors_model(a), SendWindowMsg(a.Height, a.Width)
 }
 
 func (m *Has_License_model) handleWindowResize(msg tea.WindowSizeMsg) {
@@ -214,7 +234,15 @@ func new_available_license_model(a Answers) tea.Model {
 }
 
 func New_license_from_list_model(a Answers, l_type string) (tea.Model, tea.Cmd) {
-	return New_has_License_model(a, l_type, true), func() tea.Msg {
+	writeNewLicense := true
+	prev_l_type := a.Responses[License_t].(string)
+	if prev_l_type == l_type {
+		writeNewLicense = false
+	}
+	log.Printf("Chosen license type: %s", l_type)
+	log.Printf("Previous license type: %s", prev_l_type)
+	log.Printf("WriteNewLicense: %v", writeNewLicense)
+	return New_has_License_model(a, l_type, writeNewLicense), func() tea.Msg {
 		return tea.WindowSizeMsg{
 			Height: a.Height,
 			Width:  a.Width,

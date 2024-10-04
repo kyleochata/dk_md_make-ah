@@ -24,3 +24,12 @@ func main() {
 		os.Exit(1)
 	}
 }
+
+func SendWindowMsg(height, width int) tea.Cmd {
+	return func() tea.Msg {
+		return tea.WindowSizeMsg{
+			Height: height,
+			Width:  width,
+		}
+	}
+}
