@@ -44,7 +44,7 @@ func (m *final_model) compileUserResponse() {
 	//title
 	s_title := m.Responses[Title].(string)
 	b.WriteString(fmt.Sprintf("# %s\n", s_title))
-	b.WriteString("---\n")
+	// b.WriteString("---\n")
 	//badge
 	xbitem_badges := m.Responses[Badge].([]badge.Item)
 	for i, badge := range xbitem_badges {
@@ -60,16 +60,24 @@ func (m *final_model) compileUserResponse() {
 	s_intro := m.Responses[Intro].(string)
 	b.WriteString("## Introduction\n")
 	b.WriteString(s_intro + "\n")
+
+	//INSTALL
 	//slice of all generic installation options needed for this repo
 	xs_install_choices := m.Responses[Install_choices].([]string)
+	//TODO: Need to pull the correct install string from the right md file and add to string
 	b.WriteString("## Installation\n")
 	//install_users custom install string
 	s_install_user := m.Responses[Install_user].(string)
 	b.WriteString(s_install_user + "\n")
+
 	//usage
 	s_usage := m.Responses[Usage].(string)
 	b.WriteString("## Usage\n")
 	b.WriteString(s_usage + "\n")
+
+	//License
+	//TODO: License. Need either overwrite / create license file if we have License_w = true. Also just need the license section for the README
+
 	//contributors
 
 	x_contributors := m.Responses[Contributor_l].([]Contributor)
