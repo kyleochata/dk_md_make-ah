@@ -1,6 +1,6 @@
 module github.com/kyleochata/md_maker
 
-go 1.23.2
+go 1.21
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0

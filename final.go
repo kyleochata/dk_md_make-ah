@@ -30,8 +30,8 @@ func (m final_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 func (m final_model) View() string {
-	m.compileUserResponse()
-	return "from final"
+	s := m.compileUserResponse()
+	return s
 }
 func (m *final_model) handleWindowResize(msg tea.WindowSizeMsg) {
 	m.Height, m.Width = msg.Height, msg.Width
@@ -39,7 +39,7 @@ func (m *final_model) handleWindowResize(msg tea.WindowSizeMsg) {
 func New_final_model(a Answers) tea.Model {
 	return final_model{Answers: a}
 }
-func (m *final_model) compileUserResponse() {
+func (m *final_model) compileUserResponse() string {
 	var b strings.Builder
 	//title
 	s_title := m.Responses[Title].(string)
@@ -93,6 +93,7 @@ func (m *final_model) compileUserResponse() {
 	b.WriteString(s_plug + "\n")
 	log.Println(xs_install_choices)
 	CreateMD(b.String())
+	return b.String()
 }
 func CreateMD(content string) {
 	// Create or overwrite the file "test.md"
